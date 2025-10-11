@@ -1,55 +1,33 @@
-# MultiProcessor_MESI_DotProduct - Instrucciones generales
+# MultiProcessor_MESI_DotProduct
 
-Este repositorio contiene varias implementaciones relacionadas con una simulación multiprocesador y el protocolo MESI. Dependiendo de cuál carpeta abras en tu editor, sigue las instrucciones específicas más abajo para compilar y ejecutar.
+1. Abrir terminal o PowerShell
 
-Carpetas principales y propósito
-- `INTERCONNECT/` : Proyecto CMake para un simulador de interconexión (ejecutable: `multiprocessor_sim`).
-- `PE/` : Proyecto CMake para el Processing Element (parecido a `INTERCONNECT`, genera `multiprocessor_sim`).
-- `MESI/` : Implementación independiente con un binario sencillo compilado con `g++` o `cl` y salida en `output/`.
+- **Linux:** Abrir una terminal.  
+- **Windows:** Abrir PowerShell o CMD.
 
-Requisitos
-- CMake >= 3.10 (para `INTERCONNECT` y `PE`).
-- Un compilador C++ compatible con C++17 (g++, clang, MSVC).
-- PowerShell (Windows) o una terminal bash (Linux/macOS).
+2. Crear y entrar al directorio de compilación
 
-Instrucciones rápidas por carpeta (Windows - PowerShell)
+mkdir build
+cd build
 
-1) INTERCONNECT (CMake)
+3. Generar los archivos de compilación con CMake
 
-- Abrir PowerShell en `INTERCONNECT` o abrir la carpeta `INTERCONNECT` en el editor y usar la terminal integrada.
-- Crear y entrar en el directorio de build, generar y compilar:
-
-```powershell
-mkdir build; cd build
 cmake ..
+
+4. Compilar el ejecutable
+
 cmake --build .
-```
 
-- El ejecutable generado será `multiprocessor_sim.exe` en Windows (o `multiprocessor_sim` en Linux).
-- Ejecutarlo desde el directorio `build`:
 
-```powershell
-.\multiprocessor_sim.exe
-```
+Linux: Generará multiprocessor_sim
 
-2) PE (CMake)
+Windows: Generará multiprocessor_sim.exe
 
-- Flujo idéntico al de `INTERCONNECT` (usa CMake). Desde la carpeta `PE`:
+5. Ejecutar el simulador
 
-```powershell
-mkdir build; cd build
-cmake ..
-cmake --build .
-.\multiprocessor_sim.exe
-```
+# Linux
+./multiprocessor_sim
 
-3) MESI (compilación directa)
-
-- La carpeta `MESI` incluye un ejemplo que puede compilarse directamente con `g++` o `cl`. También existe un `build.ps1` opcional.
-- Compilar con g++ desde la raíz `MESI`:
-
-```powershell
-g++ -std=c++17 -O2 -o .\output\MESI.exe .\src\main.cpp
-.\output\MESI.exe
-```
+# Windows
+multiprocessor_sim.exe
 

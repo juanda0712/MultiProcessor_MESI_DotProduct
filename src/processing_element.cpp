@@ -2,6 +2,8 @@
 #include <chrono>
 #include <cmath>
 
+#include "cache.hpp"
+
 /* ---------- Register File ---------- */
 RegisterFile::RegisterFile() {
     for (int i = 0; i < 8; ++i)
@@ -30,10 +32,10 @@ ControlUnit::ControlUnit(RegisterFile* rf, ALU* alu, Cache* cache)
 
 void ControlUnit::executeInstruction(const Instruction& instr, size_t& pc) {
     if (instr.opcode == Opcode::LOAD) {
-        rf_->get(instr.dest) = cache_->read((size_t)rf_->get(instr.src1));
+        rf_->get(instr.dest) = cache_->cpu_load((uint64_t)rf_->get(instr.src1));
     }
     else if (instr.opcode == Opcode::STORE) {
-        cache_->write((size_t)rf_->get(instr.src1), rf_->get(instr.dest));
+        cache_->cpu_store((uint64_t)rf_->get(instr.src1), rf_->get(instr.dest));
     }
     else if (instr.opcode == Opcode::FMUL || instr.opcode == Opcode::FADD) {
         rf_->get(instr.dest) = alu_->execute(
