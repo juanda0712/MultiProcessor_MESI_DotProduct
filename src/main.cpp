@@ -44,6 +44,11 @@ int main() {
     for (auto& pe : pes) pe->start();
     for (auto& pe : pes) pe->join();
 
+    // Imprimir la salida de cada PE de forma ordenada
+    for (auto& pe : pes) {
+        std::cout << pe->getOutput();
+    }
+
     // Liberar memoria
     for (auto c : caches) delete c;
     for (auto p : pes) delete p;

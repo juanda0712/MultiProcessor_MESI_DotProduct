@@ -12,6 +12,7 @@ public:
     RegisterFile();
     double& get(const std::string& name);
     void dump();
+    std::string dump_str() const;
 
 private:
     std::unordered_map<std::string, double> regs_;
@@ -40,6 +41,7 @@ public:
     void start();
     void join();
     void initializeRegisters(double baseA, double baseB, double partialAddr, double count);
+    std::string getOutput() const;
 
 private:
     int id_;
@@ -53,4 +55,5 @@ private:
     Cache* cache_;
 
     void run();
+    std::string output_;
 };

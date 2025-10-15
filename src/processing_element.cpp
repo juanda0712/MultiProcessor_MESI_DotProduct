@@ -1,3 +1,16 @@
+#include <sstream>
+#include "processing_element.hpp"
+
+// Definición correcta del método de RegisterFile
+std::string RegisterFile::dump_str() const {
+    std::stringstream ss;
+    ss << "Registers:\n";
+    for (int i = 0; i < 8; ++i) {
+        std::string regName = "REG" + std::to_string(i);
+        ss << "  " << regName << " = " << regs_.at(regName) << "\n";
+    }
+    return ss.str();
+}
 #include "processing_element.hpp"
 #include <chrono>
 #include <cmath>
@@ -15,9 +28,14 @@ double& RegisterFile::get(const std::string& name) {
 }
 
 void RegisterFile::dump() {
-    std::cout << "Registers:\n";
-    for (auto& [k, v] : regs_) std::cout << "  " << k << " = " << v << "\n";
+    std::cout << dump_str();
 }
+
+// Definición correcta del método de ProcessingElement
+std::string ProcessingElement::getOutput() const {
+    return output_;
+}
+
 
 /* ---------- ALU ---------- */
 double ALU::execute(const std::string& op, double a, double b) {
@@ -77,12 +95,14 @@ void ProcessingElement::join() {
 }
 
 void ProcessingElement::run() {
-    std::cout << "[PE" << id_ << "] Execution start.\n";
+    std::stringstream ss;
+    ss << "[PE" << id_ << "] Execution start.\n";
     while (pc_ < program_.size()) {
         control_.executeInstruction(program_[pc_], pc_);
         pc_++;
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
-    std::cout << "[PE" << id_ << "] Execution end.\n";
-    regFile_.dump();
+    ss << "[PE" << id_ << "] Execution end.\n";
+    ss << regFile_.dump_str();
+    output_ = ss.str();
 }
