@@ -50,10 +50,13 @@ ControlUnit::ControlUnit(RegisterFile* rf, ALU* alu, Cache* cache)
 
 void ControlUnit::executeInstruction(const Instruction& instr, size_t& pc) {
     if (instr.opcode == Opcode::LOAD) {
-        rf_->get(instr.dest) = cache_->cpu_load((uint64_t)rf_->get(instr.src1));
+        // Convierte el valor leído de memoria (uint64_t) a double
+        uint64_t val = cache_->cpu_load((uint64_t)rf_->get(instr.src1));
+        rf_->get(instr.dest) = static_cast<double>(val);
     }
     else if (instr.opcode == Opcode::STORE) {
-        cache_->cpu_store((uint64_t)rf_->get(instr.src1), rf_->get(instr.dest));
+        // Convierte el valor del registro (double) a uint64_t antes de almacenar
+        cache_->cpu_store((uint64_t)rf_->get(instr.src1), static_cast<uint64_t>(rf_->get(instr.dest)));
     }
     else if (instr.opcode == Opcode::FMUL || instr.opcode == Opcode::FADD) {
         rf_->get(instr.dest) = alu_->execute(

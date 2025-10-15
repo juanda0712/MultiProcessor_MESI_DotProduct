@@ -12,9 +12,9 @@ void Loader::loadAndDistribute(const std::vector<std::string>& programFiles,
         std::string file = (i < numFiles) ? programFiles[i] : programFiles.back();
 
         std::vector<Instruction> prog = parser.parseFile(file);
-        pes[i]->loadProgram(prog);
+    pes[i]->loadProgram(prog);
 
-        std::cout << "[Loader] Program loaded into PE" << i
-                  << " from " << file << "\n";
+    std::cout << "[Loader] Program loaded into PE" << i
+          << " from " << file << " (" << prog.size() << " instructions)\n";
     }
 }
