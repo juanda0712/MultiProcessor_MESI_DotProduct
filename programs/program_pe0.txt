@@ -1,1 +1,17 @@
+; Parallel Dot Product Segment (PE0)
+; REG0 = address of A segment
+; REG1 = address of B segment
+; REG2 = address of partial sum location
+; REG3 = iteration counter (N/4)
 
+LOAD REG4, [REG2]        ; Initialize local accumulator
+LOOP:
+    LOAD REG5, [REG0]    ; Load A[i]
+    LOAD REG6, [REG1]    ; Load B[i]
+    FMUL REG7, REG5, REG6 ; Multiply
+    FADD REG4, REG4, REG7 ; Accumulate
+    INC REG0             ; Next A
+    INC REG1             ; Next B
+    DEC REG3             ; Decrement counter
+    JNZ LOOP             ; Repeat until done
+STORE REG4, [REG2]       ; Store partial sum

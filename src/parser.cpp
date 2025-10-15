@@ -21,7 +21,8 @@ std::vector<Instruction> Parser::parseFile(const std::string& filename) {
     std::string line;
 
     std::regex labelRegex(R"(^\s*([A-Za-z_][A-Za-z0-9_]*):\s*$)");
-    std::regex instrRegex(R"(^\s*([A-Z]+)\s+([^,\s]+)(?:,\s*([^,\s]+))?(?:,\s*([^,\s]+))?)");
+    // Permite operandos con corchetes y espacios
+    std::regex instrRegex(R"(^\s*([A-Z]+)\s+([^,]+?)(?:,\s*([^,]+?))?(?:,\s*([^,]+?))?)");
 
     while (std::getline(file, line)) {
         if (line.empty() || line[0] == ';' || line[0] == '#') continue;
@@ -34,9 +35,18 @@ std::vector<Instruction> Parser::parseFile(const std::string& filename) {
 
         if (std::regex_match(line, match, instrRegex)) {
             Opcode op = toOpcode(match[1]);
-            std::string d  = match.size() > 2 ? std::string(match[2]) : "";
-            std::string s1 = match.size() > 3 ? std::string(match[3]) : "";
-            std::string s2 = match.size() > 4 ? std::string(match[4]) : "";
+            auto clean = [](const std::string& s) {
+                std::string out = s;
+                // Elimina espacios y corchetes
+                out.erase(remove(out.begin(), out.end(), ' '), out.end());
+                if (!out.empty() && out.front() == '[' && out.back() == ']') {
+                    out = out.substr(1, out.size() - 2);
+                }
+                return out;
+            };
+            std::string d  = match.size() > 2 ? clean(match[2]) : "";
+            std::string s1 = match.size() > 3 ? clean(match[3]) : "";
+            std::string s2 = match.size() > 4 ? clean(match[4]) : "";
             instructions.push_back({op, d, s1, s2, ""});
         }
     }
