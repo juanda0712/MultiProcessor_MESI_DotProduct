@@ -12,5 +12,5 @@ struct Instruction {
     std::string dest;
     std::string src1;
     std::string src2;
-    std::string label;
+    std::string label;  // Para almacenar etiquetas en saltos
 };
