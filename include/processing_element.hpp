@@ -41,6 +41,11 @@ public:
     void join();
     void initializeRegisters(double baseA, double baseB, double partialAddr, double count);
 
+    // Inspección para trazas desde main
+    size_t programSize() const { return program_.size(); }
+    void dumpRegisters() const { const_cast<RegisterFile&>(regFile_).dump(); }
+    int id() const { return id_; }
+
 private:
     int id_;
     size_t pc_ = 0;

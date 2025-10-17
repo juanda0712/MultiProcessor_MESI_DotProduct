@@ -1,0 +1,36 @@
+# Ejemplo de inicialización de memoria para pruebas
+# Formatos admitidos:
+#  - "index value" (índice de palabra, luego valor)
+#  - "value" (secuencial)
+#  - Comentarios con #
+#  - Valores en decimal o hexadecimal (0x...)
+
+# Zona A para PE0: baseA = 0x0000 (REG0)
+0   0x0000000000000001
+1   0x0000000000000002
+2   0x0000000000000003
+3   0x0000000000000004
+
+# Zona B para PE0: baseB = 0x0040 (REG1) => palabra 0x0040 / 8 = 0x8 = 8
+8   0x0000000000000010
+9   0x0000000000000020
+10  0x0000000000000030
+11  0x0000000000000040
+
+# Zona de resultados PE0: partialAddr = 0x0080 (REG2) => idx = 0x10 = 16
+16  0x0000000000000000
+17  0x0000000000000000
+18  0x0000000000000000
+19  0x0000000000000000
+
+# Cargar algunas posiciones secuenciales adicionales
+# (ejemplo: a partir de idx 32, 8 valores consecutivos)
+# Si sólo pones valores, se escriben desde cursor 0 en adelante; aquí los ponemos con índice para mayor claridad
+32  0x1111111111111111
+33  0x2222222222222222
+34  0x3333333333333333
+35  0x4444444444444444
+36  0x5555555555555555
+37  0x6666666666666666
+38  0x7777777777777777
+39  0x8888888888888888
