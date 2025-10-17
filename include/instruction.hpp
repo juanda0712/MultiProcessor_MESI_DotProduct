@@ -9,8 +9,9 @@ enum class Opcode {
 
 struct Instruction {
     Opcode opcode;
-    std::string dest;
+    std::string dest;      // Para la mayoría de instrucciones
     std::string src1;
     std::string src2;
-    std::string label;  // Para almacenar etiquetas en saltos
+    std::string label;     // Para JNZ
+    std::string condition_reg; // NUEVO: registro para condición en JNZ
 };

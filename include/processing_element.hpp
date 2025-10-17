@@ -24,14 +24,14 @@ public:
 };
 
 class ControlUnit {
-public:
-    ControlUnit(RegisterFile* rf, ALU* alu, Cache* cache);
-    void executeInstruction(const Instruction& instr, size_t& pc);
-
 private:
     RegisterFile* rf_;
     ALU* alu_;
     Cache* cache_;
+
+public:
+    ControlUnit(RegisterFile* rf, ALU* alu, Cache* cache);
+    size_t executeInstruction(const Instruction& instr, size_t current_pc);
 };
 
 class ProcessingElement {
