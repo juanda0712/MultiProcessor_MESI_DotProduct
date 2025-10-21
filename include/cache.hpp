@@ -31,6 +31,11 @@ public:
     SnoopRet on_snoop(const SnoopMessage& sm);
     std::optional<std::array<uint64_t, WORDS_PER_LINE>> evict_if_M_and_get_line(uint64_t base);
     void dump_state();
+    
+    // Métodos para estadísticas
+    size_t get_hits() const { return hits_; }
+    size_t get_misses() const { return misses_; }
+    size_t get_transitions() const { return trans_; }
 
 private:
     struct CacheLine {

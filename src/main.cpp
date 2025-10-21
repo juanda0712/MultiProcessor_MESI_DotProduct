@@ -62,6 +62,50 @@ int main() {
     for (auto& pe : pes) pe->start();
     for (auto& pe : pes) pe->join();
 
+    // Recolectar estadísticas de caché
+    for (int i = 0; i < NUM_PES; ++i) {
+        ic.record_cache_stats(i, caches[i]->get_hits(), caches[i]->get_misses());
+    }
+
+    // Mostrar todas las estadísticas
+    std::cout << "\n" << std::string(60, '=') << std::endl;
+    std::cout << "SYSTEM STATISTICS SUMMARY" << std::endl;
+    std::cout << std::string(60, '=') << std::endl;
+
+    // Segmentación de memoria
+    mem.dump_segments();
+
+    // Estadísticas de memoria
+    mem.dump_stats();
+
+    // Estadísticas del bus y por PE
+    ic.dump_stats();
+    ic.dump_pe_stats();
+
+    // Estado final de las cachés
+    std::cout << "\n=== Final Cache States ===" << std::endl;
+    for (auto cache : caches) {
+        cache->dump_state();
+    }
+
+    // Resultados del producto punto
+    std::cout << "\n=== DOT PRODUCT FINAL RESULTS ===" << std::endl;
+    std::cout << "PE0 Partial Sum @ 0x0080: " << mem.read_word(0x0080) << std::endl;
+    std::cout << "PE1 Partial Sum @ 0x0180: " << mem.read_word(0x0180) << std::endl; 
+    std::cout << "PE2 Partial Sum @ 0x0280: " << mem.read_word(0x0280) << std::endl;
+    std::cout << "PE3 Partial Sum @ 0x0380: " << mem.read_word(0x0380) << std::endl;
+
+    // Calcular suma total (producto punto final)
+    double final_sum = mem.read_word(0x0080) + mem.read_word(0x0180) + 
+                    mem.read_word(0x0280) + mem.read_word(0x0380);
+    std::cout << "FINAL DOT PRODUCT: " << final_sum << std::endl;
+
+    // Validación (debería ser: (1×10 + 2×11 + 3×12 + 4×13) × 4 PEs = ...)
+    std::cout << "EXPECTED: Each PE computes (1×10 + 2×11 + 3×12 + 4×13) = " 
+            << (1*10 + 2*11 + 3*12 + 4*13) << std::endl;
+    std::cout << "Total expected: " << (1*10 + 2*11 + 3*12 + 4*13) * 4 << std::endl;
+
+
     // Imprimir la salida de cada PE de forma ordenada
     for (auto& pe : pes) {
         std::cout << pe->getOutput();
