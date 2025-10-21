@@ -17,9 +17,13 @@ public:
     BusResponse process(const BusRequest& req);
     void writeback_from_evict(uint64_t base, const std::array<uint64_t, WORDS_PER_LINE>& line);
 
+    // Métodos para estadísticas
+    void dump_stats() const;
+
 private:
     MainMemory* mem_;
     std::vector<Cache*> caches_;
+    size_t bus_usage_; // Contador de uso del bus
 
     BusResponse handle_BusRd(int src, uint64_t base);
     BusResponse handle_BusRdX(int src, uint64_t base);

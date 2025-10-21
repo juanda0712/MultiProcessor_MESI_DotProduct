@@ -22,6 +22,18 @@ int main() {
     MainMemory mem;
     Interconnect ic(&mem);
 
+    /* // Prueba de tamaño de memoria
+    std::cout << "=== Memory Size Test ===" << std::endl;
+    std::cout << "Expected: 512 words (4096 bytes)" << std::endl;
+
+    // Probar acceso a palabras individuales
+    mem.write_word(0x0000, 0x123456789ABCDEF0);
+    uint64_t val = mem.read_word(0x0000);
+    std::cout << "Write/Read test: 0x" << std::hex << val << std::dec << std::endl;
+
+    // Probar acceso desalineado (debería mostrar warning)
+    mem.read_line(0x0008); // Desalineado - no múltiplo de 32 */
+
     // Inicializar datos de prueba para cada PE
     mem.initialize_dot_product_data(0x0000, 0x0040, 0x0080, 4); // PE0
     mem.initialize_dot_product_data(0x0100, 0x0140, 0x0180, 4); // PE1
@@ -60,5 +72,19 @@ int main() {
     for (auto p : pes) delete p;
 
     std::cout << "All PEs finished execution.\n";
+
+    /* // Prueba de estadísticas finales
+    std::cout << "\n=== Final Statistics ===" << std::endl;
+    mem.dump_stats();
+    ic.dump_stats();
+
+    // Mostrar resultados del producto punto
+    std::cout << "\n=== Dot Product Results ===" << std::endl;
+    mem.dump_memory_range(0x0080, 0x0080); // PE0 partial sum
+    mem.dump_memory_range(0x0180, 0x0180); // PE1 partial sum  
+    mem.dump_memory_range(0x0280, 0x0280); // PE2 partial sum
+    mem.dump_memory_range(0x0380, 0x0380); // PE3 partial sum */
+
     return 0;
+    
 }
