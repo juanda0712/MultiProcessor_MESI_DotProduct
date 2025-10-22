@@ -10,11 +10,16 @@
 mkdir build
 cd build
 
-3. Generar los archivos de compilación con CMake
+3. Copiar la carpeta "programs" a Build
+
+cp -r ../programs .
+
+
+4. Generar los archivos de compilación con CMake
 
 cmake ..
 
-4. Compilar el ejecutable
+5. Compilar el ejecutable
 
 cmake --build .
 
@@ -23,7 +28,7 @@ Linux: Generará multiprocessor_sim
 
 Windows: Generará multiprocessor_sim.exe
 
-5. Ejecutar el simulador
+6. Ejecutar el simulador
 
 # Linux
 ./multiprocessor_sim

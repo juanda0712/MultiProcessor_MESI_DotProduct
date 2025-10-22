@@ -1,17 +1,16 @@
-; Parallel Dot Product Segment (PE0)
-; REG0 = address of A segment
-; REG1 = address of B segment
-; REG2 = address of partial sum location
-; REG3 = iteration counter (N/4)
+LOAD  REG4, [REG0]       ; Cargar A[i]
+LOAD  REG5, [REG1]       ; Cargar B[i]
+FMUL  REG6, REG4, REG5   ; REG6 = A[i] * B[i]
 
-LOAD REG4, [REG2]        ; Initialize local accumulator
-LOOP:
-    LOAD REG5, [REG0]    ; Load A[i]
-    LOAD REG6, [REG1]    ; Load B[i]
-    FMUL REG7, REG5, REG6 ; Multiply
-    FADD REG4, REG4, REG7 ; Accumulate
-    INC REG0             ; Next A
-    INC REG1             ; Next B
-    DEC REG3             ; Decrement counter
-    JNZ LOOP             ; Repeat until done
-STORE REG4, [REG2]       ; Store partial sum
+INC   REG0               ; Avanza puntero A
+INC   REG1               ; Avanza puntero B
+
+LOAD  REG4, [REG0]       ; Cargar A[i+1]
+LOAD  REG5, [REG1]       ; Cargar B[i+1]
+FMUL  REG5, REG4, REG5   ; REG5 = A[i+1] * B[i+1]
+
+FADD  REG6, REG6, REG5   ; REG6 = REG6 + REG5
+
+STORE [REG2], REG6       ; Guardar resultado parcial
+
+INC   REG2               ; Avanza puntero destino
