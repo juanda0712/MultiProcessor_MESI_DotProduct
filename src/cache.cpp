@@ -1,5 +1,6 @@
 #include "cache.hpp"
 #include "interconnect.hpp"
+#include <algorithm>
 
 // ============================
 // Constructor
@@ -37,13 +38,16 @@ std::optional<std::array<uint64_t, WORDS_PER_LINE>> Cache::evict_if_M_and_get_li
     WayRef wr = lookup(base);
     if (wr.cl && wr.cl->state == MESI::M) {
         auto line = wr.cl->data;
+        // writeback handled by caller; mark the cacheline as invalid (evicted)
         wr.cl->dirty = false;
-        wr.cl->valid = true;
-        wr.cl->state = MESI::I;
+        wr.cl->valid = false;                // <- changed: no longer valid
+        wr.cl->state = MESI::I;              // invalid state
+        wr.cl->tag = 0;                      // optional: clear tag to avoid confusion
         return line;
     }
     return std::nullopt;
 }
+
 
 // ============================
 // find_free_or_victim
@@ -203,11 +207,20 @@ Cache::SnoopRet Cache::on_snoop(const SnoopMessage& sm) {
         case BusCmd::Upgrade:
             if (cl.state == MESI::M) {
                 out.hit = true; out.hitM = true; out.wb = cl.data;
-                cl.dirty = false; cl.state = MESI::I; cl.valid = true; out.invalidated = true; trans_++;
+                cl.dirty = false;
+                cl.state = MESI::I;
+                cl.valid = false;            // <- changed: mark invalid
+                out.invalidated = true;
+                trans_++;
             } else if (cl.state == MESI::E || cl.state == MESI::S) {
-                out.hit = true; cl.state = MESI::I; cl.valid = true; out.invalidated = true; trans_++;
+                out.hit = true;
+                cl.state = MESI::I;
+                cl.valid = false;            // <- changed: mark invalid
+                out.invalidated = true;
+                trans_++;
             }
             break;
+
 
         default:
             break;
@@ -229,6 +242,34 @@ void Cache::dump_state() {
                           << " base 0x" << std::hex << cl.tag << std::dec
                           << " state " << mesi_str(cl.state)
                           << " dirty " << cl.dirty << "\n";
+            }
+        }
+    }
+}
+
+void Cache::flush() {
+    for (size_t s = 0; s < NUM_SETS; ++s) {
+        for (size_t w = 0; w < NUM_WAYS; ++w) {
+            CacheLine &cl = sets_[s][w];
+            if (cl.valid && cl.state == MESI::M) {
+                // crear base desde tag (ya lo tienes en cl.tag)
+                uint64_t base = cl.tag;
+                // writeback a través del interconnect
+                if (ic_) {
+                    // construir BusRequest WriteBack equivalente interno
+                    BusRequest wb;
+                    wb.cmd = BusCmd::WriteBack;
+                    wb.addr = base;
+                    wb.src_id = id_;
+                    wb.wline = cl.data; // suponiendo que BusRequest tiene wline
+                    ic_->process(wb); // esto hará mem_->write_line
+                } else if (mem_) {
+                    // fallback directo (no recomendado si usas interconnect)
+                    mem_->write_line(base, cl.data);
+                }
+                cl.dirty = false;
+                // mantener estado E (ahora coherente con memoria) o I según diseño:
+                cl.state = MESI::E;
             }
         }
     }

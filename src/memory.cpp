@@ -4,17 +4,28 @@
 #include <fstream>
 
 void MainMemory::initialize_dot_product_data(size_t baseA, size_t baseB, size_t partialAddr, size_t count) {
-    // Inicializa A y B con valores simples y la suma parcial en 0
+    std::cout << "[Memory] Initializing dot product data..." << std::endl;
+
+    // Inicializar vector A con valores 1..count
     for (size_t i = 0; i < count; ++i) {
-        write_word(baseA + i * WORD_SIZE, 1 + i); // A[i] = 1, 2, 3, ...
-        write_word(baseB + i * WORD_SIZE, 10 + i); // B[i] = 10, 11, 12, ...
+        write_word(baseA + i * WORD_SIZE, 1 + i);
     }
-    write_word(partialAddr, 0); // suma parcial en 0
-    
-    std::cout << "[Memory] Initialized dot product data: baseA=0x" << std::hex << baseA 
-              << ", baseB=0x" << baseB << ", partialAddr=0x" << partialAddr 
-              << ", count=" << std::dec << count << std::endl;
+
+    // Inicializar vector B con valores 10..(10 + count - 1)
+    for (size_t i = 0; i < count; ++i) {
+        write_word(baseB + i * WORD_SIZE, 10 + i);
+    }
+
+    // Inicializar sumas parciales (una por PE)
+    for (size_t i = 0; i < 4; ++i) {
+        write_word(partialAddr + i * WORD_SIZE, 0);
+    }
+
+    std::cout << "[Memory] Initialized A[0x" << std::hex << baseA << "]..A[" << (baseA + count * WORD_SIZE - 1)
+              << "], B[0x" << baseB << "]..B[" << (baseB + count * WORD_SIZE - 1)
+              << "], partials @ 0x" << partialAddr << std::dec << std::endl;
 }
+
 
 MainMemory::MainMemory() : read_count_(0), write_count_(0) {
     for (size_t i = 0; i < MEM_WORDS; ++i)

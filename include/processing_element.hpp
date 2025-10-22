@@ -7,22 +7,25 @@
 #include <string>
 #include <iostream>
 
+/* ---------- Register File ---------- */
 class RegisterFile {
 public:
     RegisterFile();
-    double& get(const std::string& name);
-    void dump();
+    uint64_t& get(const std::string& name);
+    void dump() const;
     std::string dump_str() const;
-
 private:
-    std::unordered_map<std::string, double> regs_;
+    std::unordered_map<std::string, uint64_t> regs_;
 };
 
+
+/* ---------- ALU ---------- */
 class ALU {
 public:
     double execute(const std::string& op, double a, double b);
 };
 
+/* ---------- Control Unit ---------- */
 class ControlUnit {
 private:
     RegisterFile* rf_;
@@ -34,6 +37,7 @@ public:
     size_t executeInstruction(const Instruction& instr, size_t current_pc);
 };
 
+/* ---------- Processing Element ---------- */
 class ProcessingElement {
 public:
     ProcessingElement(int id, Cache* cache);
@@ -42,8 +46,11 @@ public:
     void join();
     void initializeRegisters(double baseA, double baseB, double partialAddr, double count);
     std::string getOutput() const;
+    void dump_registers() const;
 
 private:
+    void run();
+
     int id_;
     size_t pc_ = 0;
     std::thread thread_;
@@ -54,6 +61,5 @@ private:
     ControlUnit control_;
     Cache* cache_;
 
-    void run();
     std::string output_;
 };

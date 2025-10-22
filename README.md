@@ -12,7 +12,7 @@ cd build
 
 3. Copiar la carpeta "programs" a Build
 
-cp -r ../program .
+cp -r ../programs .
 
 
 4. Generar los archivos de compilación con CMake

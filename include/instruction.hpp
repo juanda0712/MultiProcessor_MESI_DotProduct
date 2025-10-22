@@ -14,4 +14,5 @@ struct Instruction {
     std::string src2;
     std::string label;     // Para JNZ
     std::string condition_reg; // NUEVO: registro para condición en JNZ
+    std::string opcodeName() const;
 };

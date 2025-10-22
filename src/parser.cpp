@@ -89,14 +89,24 @@ std::vector<Instruction> Parser::parseFile(const std::string &filename)
             {
                 if (s.empty())
                     return "";
+
                 std::string result = s;
                 result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end());
-                if (result.size() >= 2 && result.front() == '[' && result.back() == ']')
-                {
-                    result = result.substr(1, result.size() - 2);
+
+                // Detectar corchetes para acceso a memoria
+                bool is_mem = false;
+                if (result.size() >= 2 && result.front() == '[' && result.back() == ']') {
+                    result = result.substr(1, result.size() - 2); // quitar corchetes
+                    is_mem = true;
                 }
+
+                // Guardar la info de si es memoria usando un sufijo por ejemplo "_M"
+                if (is_mem)
+                    result += "_M";
+
                 return result;
             };
+
 
             std::string dest = clean_operand(match[2]);
             std::string src1 = (match.size() > 3 && match[3].matched) ? clean_operand(match[3]) : "";
@@ -115,7 +125,6 @@ std::vector<Instruction> Parser::parseFile(const std::string &filename)
                 instructions.push_back({op, dest, src1, src2, label, ""});
             }
 
-            instructions.push_back({op, dest, src1, src2, label});
 
             std::cout << "[Parser] Parsed instruction " << (instructions.size() - 1) << ": "
                       << match[1] << " dest='" << dest << "' src1='" << src1 << "' src2='" << src2 << "'" << std::endl;
