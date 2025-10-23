@@ -1,0 +1,16 @@
+LOAD  REG4, [REG0]       ; Cargar A[i]
+LOAD  REG5, [REG1]       ; Cargar B[i]
+FMUL  REG6, REG4, REG5   ; REG6 = A[i] * B[i]
+
+INC   REG0               ; Avanza puntero A
+INC   REG1               ; Avanza puntero B
+
+LOAD  REG4, [REG0]       ; Cargar A[i+1]
+LOAD  REG5, [REG1]       ; Cargar B[i+1]
+FMUL  REG5, REG4, REG5   ; REG5 = A[i+1] * B[i+1]
+
+FADD  REG6, REG6, REG5   ; REG6 = REG6 + REG5
+
+STORE [REG2], REG6       ; Guardar resultado parcial
+
+INC   REG2               ; Avanza puntero destino

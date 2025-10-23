@@ -7,7 +7,8 @@
 
 int main(int argc, char** argv) {
     const int NUM_PES = 4;
-    std::string programFile = (argc > 1) ? argv[1] : "../programs/program_pe0.txt";
+    // Default program path is relative to repo root when launched via GUI
+    std::string programFile = (argc > 1) ? argv[1] : "programs/program_pe0.txt";
 
     std::vector<Cache*> caches;
     std::vector<ProcessingElement*> pes;
@@ -15,7 +16,7 @@ int main(int argc, char** argv) {
     MainMemory mem;
     Interconnect ic(&mem);
 
-    // Inicializa datos (por defecto A=1..16, B=10..25)
+    // Inicializa datos (por defecto A=1..16, B=10..25) en direcciones consistentes con distribución
     mem.initialize_dot_product_data(0x0000, 0x0080, 0x0200, 16);
 
     // Crear caches y PEs
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
     // Distribuir trabajo: elegir partialBase fuera de A/B
     TaskDistributor distributor;
     uint64_t baseA = 0x0000;
-    uint64_t baseB = 0x0040;
+    uint64_t baseB = 0x0080; // Debe coincidir con initialize_dot_product_data
     uint64_t partialBase = 0x0200; // <-- importante: debe estar fuera de A/B
     distributor.distributeWork(pes, baseA, baseB, partialBase, 16);
 

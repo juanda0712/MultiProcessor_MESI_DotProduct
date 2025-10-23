@@ -1,0 +1,27 @@
+; Dot product with running products and final sum
+; Conventions:
+;   REG0 = ptr A
+;   REG1 = ptr B
+;   REG2 = ptr OUT (buffer for per-iteration products, final sum at end)
+;   REG3 = N (iteration count)
+;   REG4, REG5 = temporaries for loads
+;   REG6 = accumulator (sum)
+;   REG7 = temporary for product
+;
+; Pre: REG6 assumed 0 (RegisterFile initializes to 0)
+; Post: Stores N individual products to [REG2..REG2+N-1] and then final sum at [REG2+N]
+
+LOOP:
+    LOAD  REG4, [REG0]       ; A[i]
+    LOAD  REG5, [REG1]       ; B[i]
+    FMUL  REG7, REG4, REG5   ; product = A[i] * B[i]
+    FADD  REG6, REG6, REG7   ; sum += product
+    STORE [REG2], REG7       ; write product to OUT[i]
+    INC   REG0               ; ++ptr A
+    INC   REG1               ; ++ptr B
+    INC   REG2               ; ++ptr OUT
+    DEC   REG3               ; --count
+    JNZ   LOOP               ; if (REG3 != 0) goto LOOP
+
+; Store final sum after the products buffer
+    STORE [REG2], REG6       ; OUT[N] = sum
