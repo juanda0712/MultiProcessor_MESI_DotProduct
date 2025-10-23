@@ -327,7 +327,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
     switch (msg) {
     case WM_CREATE: {
         ComputeRepoPaths();
-        CreateWindowW(L"BUTTON", L"Examinar…", WS_CHILD|WS_VISIBLE, 0,0,0,0, hWnd, (HMENU)IDC_BTN_BROWSE, nullptr, nullptr);
+        CreateWindowW(L"BUTTON", L"Examinar", WS_CHILD|WS_VISIBLE, 0,0,0,0, hWnd, (HMENU)IDC_BTN_BROWSE, nullptr, nullptr);
         CreateWindowW(L"BUTTON", L"Guardar y compilar", WS_CHILD|WS_VISIBLE, 0,0,0,0, hWnd, (HMENU)IDC_BTN_BUILD, nullptr, nullptr);
         HWND hRun = CreateWindowW(L"BUTTON", L"Ejecutar", WS_CHILD|WS_VISIBLE, 0,0,0,0, hWnd, (HMENU)IDC_BTN_RUN, nullptr, nullptr);
         EnableWindow(hRun, FALSE);
