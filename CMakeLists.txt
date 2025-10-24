@@ -55,6 +55,19 @@ elseif(UNIX)
       message(FATAL_ERROR "No se encontró x86_64-w64-mingw32-g++. Instala mingw-w64 (e.g., sudo apt install mingw-w64).")
     endif()
 
+    # Elegir generador seguro para el sub-build (evitar fallo si Ninja no está instalado)
+    # Usaremos Ninja si existe; de lo contrario, Unix Makefiles.
+    find_program(NINJA_EXE ninja)
+    if(NINJA_EXE)
+      set(_ext_generator "Ninja")
+      set(_ext_cmake_args -DCMAKE_MAKE_PROGRAM=${NINJA_EXE})
+      message(STATUS "Sub-build GUI: usando generador Ninja")
+    else()
+      set(_ext_generator "Unix Makefiles")
+      set(_ext_cmake_args )
+      message(STATUS "Sub-build GUI: Ninja no encontrado → usando Unix Makefiles")
+    endif()
+
     include(ExternalProject)
 
     # Escribimos un toolchain file dentro del binario-dir (no ensuciamos el repo)
@@ -83,9 +96,11 @@ set(CMAKE_STRIP   ${TOOLCHAIN_PREFIX}-strip)
     ExternalProject_Add(gui_win_build
       SOURCE_DIR  "${CMAKE_SOURCE_DIR}"
       BINARY_DIR  "${_win_bin_dir}"
+      CMAKE_GENERATOR ${_ext_generator}
       CMAKE_ARGS
         -DCMAKE_TOOLCHAIN_FILE=${_toolchain}
         -DCMAKE_BUILD_TYPE=$<IF:$<CONFIG:>,${CMAKE_BUILD_TYPE},Release>
+        ${_ext_cmake_args}
       BUILD_ALWAYS 1
       INSTALL_COMMAND ""
       STEP_TARGETS build
