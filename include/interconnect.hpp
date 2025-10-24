@@ -78,7 +78,8 @@ private:
     std::map<int, PEStats> pe_stats_; // Estadísticas por PE
 
     // Mecanismo de arbitración
-    std::queue<PendingRequest> request_queue_;
+    //std::queue<PendingRequest> request_queue_;
+    std::deque<PendingRequest> request_queue_;
     std::mutex queue_mutex_;
     std::condition_variable arbitration_cv_;
     std::atomic<int> current_owner_{-1}; // -1 = bus libre

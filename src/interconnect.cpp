@@ -44,76 +44,85 @@ void Interconnect::stop_arbitration() {
 void Interconnect::arbitration_loop() {
     std::random_device rd;
     std::mt19937 gen(rd());
-    
+
     while (running_) {
-        std::unique_ptr<PendingRequest> pending_req = nullptr;
-        bool has_request = false;
-        
-        {
-            std::unique_lock<std::mutex> lock(queue_mutex_);
-            
-            // Esperar por requests o señal de terminación
-            arbitration_cv_.wait_for(lock, std::chrono::milliseconds(50), 
-                [this]() { return !request_queue_.empty() || !running_; });
-            
-            if (!running_) break;
-            
-            if (!request_queue_.empty()) {
-                pending_req = std::make_unique<PendingRequest>(std::move(request_queue_.front()));
-                request_queue_.pop();
-                has_request = true;
-            }
-        }
-        
-        if (has_request && pending_req) {
-            arbitration_cycles_++;
-            
-            // POLÍTICA DE ARBITRACIÓN: Round Robin
-            int selected_pe = select_next_pe();
-            
-            // Si hay conflicto, el PE seleccionado puede no ser el solicitante
-            // En este caso, el solicitante original debe esperar
-            if (selected_pe != pending_req->request.src_id) {
-                std::cout << "[Arbitration] Conflict: PE" << pending_req->request.src_id 
-                          << " must wait, granting bus to PE" << selected_pe << std::endl;
-                
-                // Re-encolar la request del PE que no fue seleccionado
-                {
-                    std::lock_guard<std::mutex> lock(queue_mutex_);
-                    request_queue_.push(std::move(*pending_req));
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+
+        // Esperar por requests o señal de terminación
+        arbitration_cv_.wait_for(lock, std::chrono::milliseconds(50),
+            [this]() { return !request_queue_.empty() || !running_; });
+
+        if (!running_) break;
+        if (request_queue_.empty()) continue;
+
+        arbitration_cycles_++;
+
+        // BUSCAR el siguiente PE **que tiene** una petición en la cola,
+        // empezando desde last_granted_pe_ + 1 (round-robin entre solicitantes).
+        int start = (last_granted_pe_ + 1) % 4;
+        int chosen_pe = -1;
+        size_t chosen_idx = 0;
+
+        // recorrer la cola y encontrar la primera petición cuyo src_id
+        // coincide con el orden round-robin
+        for (int offset = 0; offset < 4; ++offset) {
+            int candidate = (start + offset) % 4;
+            for (size_t i = 0; i < request_queue_.size(); ++i) {
+                if (request_queue_[i].request.src_id == candidate) {
+                    chosen_pe = candidate;
+                    chosen_idx = i;
+                    break;
                 }
-                continue;
             }
-            
-            // Adquirir el bus
-            bus_busy_.store(true);
-            current_owner_.store(pending_req->request.src_id);
-            
-            std::cout << "[Arbitration] PE" << pending_req->request.src_id 
-                      << " granted bus for " << bus_cmd_str(pending_req->request.cmd) 
-                      << " @ 0x" << std::hex << pending_req->request.addr << std::dec << std::endl;
-            
-            // Simular latencia del bus
-            simulate_bus_latency();
-            
-            // Procesar la request
-            BusResponse response = process_request(pending_req->request);
-            
-            // Liberar el bus
-            current_owner_.store(-1);
-            bus_busy_.store(false);
-            
-            // Cumplir la promesa
-            pending_req->promise.set_value(response);
-            
-            std::cout << "[Arbitration] PE" << pending_req->request.src_id 
-                      << " released bus" << std::endl;
-            
-            // Pequeña pausa entre transacciones
-            std::this_thread::sleep_for(std::chrono::microseconds(5));
+            if (chosen_pe != -1) break;
         }
+
+        // Si no encontramos según round-robin (p. ej. estructura inconsistente),
+        // tomar la primera petición (fallback FIFO).
+        if (chosen_pe == -1) {
+            chosen_idx = 0;
+            chosen_pe = request_queue_.front().request.src_id;
+        }
+
+        // Extraer la petición seleccionada (sin copiar innecesariamente)
+        PendingRequest pending_req = std::move(request_queue_[chosen_idx]);
+        request_queue_.erase(request_queue_.begin() + chosen_idx);
+
+        // Actualizar last_granted_pe_
+        last_granted_pe_ = chosen_pe;
+
+        // Liberar el lock mientras procesamos la petición en el bus
+        lock.unlock();
+
+        // Adquirir el bus
+        bus_busy_.store(true);
+        current_owner_.store(pending_req.request.src_id);
+
+        std::cout << "[Arbitration] PE" << pending_req.request.src_id
+                  << " granted bus for " << bus_cmd_str(pending_req.request.cmd)
+                  << " @ 0x" << std::hex << pending_req.request.addr << std::dec << std::endl;
+
+        // Simular latencia del bus
+        simulate_bus_latency();
+
+        // Procesar la request
+        BusResponse response = process_request(pending_req.request);
+
+        // Liberar el bus
+        current_owner_.store(-1);
+        bus_busy_.store(false);
+
+        // Cumplir la promesa
+        pending_req.promise.set_value(response);
+
+        std::cout << "[Arbitration] PE" << pending_req.request.src_id
+                  << " released bus" << std::endl;
+
+        // Pequeña pausa entre transacciones para evitar spinning agresivo
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 }
+
 
 int Interconnect::select_next_pe() {
     // Política Round Robin simple
@@ -163,7 +172,7 @@ BusResponse Interconnect::send_request(const BusRequest& req) {
     // Agregar request a la cola
     {
         std::lock_guard<std::mutex> lock(queue_mutex_);
-        request_queue_.push(std::move(pending_req));
+        request_queue_.push_back(std::move(pending_req));
     }
     
     // Notificar al arbitrador
