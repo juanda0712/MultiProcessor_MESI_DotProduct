@@ -335,6 +335,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         // Log
         CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"", WS_CHILD|WS_VISIBLE|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY|WS_VSCROLL,
                         0,0,0,0, hWnd, (HMENU)IDC_EDIT_LOG, nullptr, nullptr);
+
+        SendMessageW(GetDlgItem(hWnd, IDC_EDIT_LOG), EM_LIMITTEXT, 50 * 1024 * 1024, 0);
+
         // Code editor
         CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", L"", WS_CHILD|WS_VISIBLE|ES_MULTILINE|ES_AUTOVSCROLL|ES_AUTOHSCROLL|ES_WANTRETURN|WS_VSCROLL|WS_HSCROLL,
                         0,0,0,0, hWnd, (HMENU)IDC_EDIT_CODE, nullptr, nullptr);

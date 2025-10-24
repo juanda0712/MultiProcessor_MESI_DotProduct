@@ -232,7 +232,7 @@ void ProcessingElement::run()
         }
 
         // Quitar el sleep que ralentiza mucho
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     if (instruction_count >= MAX_INSTRUCTIONS) {

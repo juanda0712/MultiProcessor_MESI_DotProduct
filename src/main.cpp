@@ -8,7 +8,7 @@
 int main(int argc, char** argv) {
     const int NUM_PES = 4;
     // Default program path is relative to repo root when launched via GUI
-    std::string programFile = (argc > 1) ? argv[1] : "programs/program_pe0.txt";
+    std::string programFile = (argc > 1) ? argv[1] : "programs/program_pe1_advanced.txt";
 
     std::vector<Cache*> caches;
     std::vector<ProcessingElement*> pes;
@@ -48,6 +48,10 @@ int main(int argc, char** argv) {
     // Ejecutar
     for (auto& pe : pes) pe->start();
     for (auto& pe : pes) pe->join();
+
+    // Mostrar dump final de todos los PE
+    std::cout << "\n===== ESTADO FINAL DE REGISTROS POR PE =====\n";
+    for (auto& pe : pes) pe->dump_registers();
 
     // recolectar stats...
     for (int i = 0; i < NUM_PES; ++i) {
