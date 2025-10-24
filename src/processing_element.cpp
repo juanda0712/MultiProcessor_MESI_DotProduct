@@ -22,7 +22,12 @@ std::string RegisterFile::dump_str() const
     ss << "Registers:\n";
     for (int i = 0; i < 8; ++i) {
         std::string regName = "REG" + std::to_string(i);
-        ss << "  " << regName << " = " << regs_.at(regName) << "\n";
+        auto it = regs_.find(regName);
+        if (it != regs_.end()) {
+            ss << "  " << regName << " = " << it->second << "\n";
+        } else {
+            ss << "  " << regName << " = [UNDEFINED]\n";
+        }
     }
     return ss.str();
 }
@@ -87,8 +92,10 @@ size_t ControlUnit::executeInstruction(const Instruction &instr, size_t current_
             addr = (uint64_t)rf_->get(reg);
             cache_->cpu_store(addr, data);
 
-            std::cout << "[STORE] Guardando valor " << data
-                    << " en Mem[" << reg << "] dirección " << addr << std::endl;
+            // Reducir verbosidad para evitar spam de consola
+            // std::cout << "[STORE] Guardando valor " << data
+            //         << " en Mem[" << reg << "] dirección " << addr << std::endl;
+            // std::cout.flush(); // Forzar escritura del buffer
         } else {
             std::cerr << "[STORE] Error: STORE requiere destino de memoria con corchetes" << std::endl;
         }
@@ -141,8 +148,9 @@ size_t ControlUnit::executeInstruction(const Instruction &instr, size_t current_
         }
     }
 
-    // Mostrar dump de registros tras cada instrucción
-    std::cout << "[ControlUnit] Dump de registros:\n" << rf_->dump_str() << std::endl;
+    // Comentado: demasiada salida de debug puede causar que se cuelgue
+    // std::cout << "[ControlUnit] Dump de registros:\n" << rf_->dump_str() << std::endl;
+    // std::cout.flush(); // Forzar escritura del buffer
 
     return new_pc;
 }
@@ -150,7 +158,7 @@ size_t ControlUnit::executeInstruction(const Instruction &instr, size_t current_
 
 /* ---------- Processing Element ---------- */
 ProcessingElement::ProcessingElement(int id, Cache *cache)
-    : id_(id), cache_(cache), control_(&regFile_, &alu_, cache) {}
+    : id_(id), regFile_(), alu_(), control_(&regFile_, &alu_, cache), cache_(cache) {}
 
 void ProcessingElement::loadProgram(const std::vector<Instruction> &program)
 {
@@ -179,30 +187,38 @@ void ProcessingElement::join()
 void ProcessingElement::run()
 {
     std::stringstream ss;
+    ss << "[PE" << id_ << "] Starting execution with " << program_.size() << " instructions\n";
     ss << "[PE" << id_ << "] Initial registers:\n" << regFile_.dump_str() << "\n";
 
-    while (pc_ < program_.size())
+    size_t instruction_count = 0;
+    const size_t MAX_INSTRUCTIONS = 10000; // Prevenir bucles infinitos
+
+    while (pc_ < program_.size() && instruction_count < MAX_INSTRUCTIONS)
     {
         const Instruction &instr = program_[pc_];
 
-        ss << "[PE" << id_ << "] PC=" << pc_ << " Executing: ";
-        switch (instr.opcode)
-        {
-        case Opcode::LOAD:  ss << "LOAD " << instr.dest << ", [" << instr.src1 << "]"; break;
-        case Opcode::STORE: ss << "STORE " << instr.dest << ", [" << instr.src1 << "]"; break;
-        case Opcode::FMUL:  ss << "FMUL " << instr.dest << ", " << instr.src1 << ", " << instr.src2; break;
-        case Opcode::FADD:  ss << "FADD " << instr.dest << ", " << instr.src1 << ", " << instr.src2; break;
-        case Opcode::INC:   ss << "INC " << instr.dest; break;
-        case Opcode::DEC:   ss << "DEC " << instr.dest; break;
-        case Opcode::JNZ:   ss << "JNZ " << instr.dest << " (REG3=" << regFile_.get("REG3") << ")"; break;
-        default:            ss << "UNKNOWN"; break;
+        // Solo mostrar algunas instrucciones para evitar spam
+        if (instruction_count < 10 || instruction_count % 100 == 0) {
+            ss << "[PE" << id_ << "] PC=" << pc_ << " #" << instruction_count << " Executing: ";
+            switch (instr.opcode)
+            {
+            case Opcode::LOAD:  ss << "LOAD " << instr.dest << ", [" << instr.src1 << "]"; break;
+            case Opcode::STORE: ss << "STORE " << instr.dest << ", [" << instr.src1 << "]"; break;
+            case Opcode::FMUL:  ss << "FMUL " << instr.dest << ", " << instr.src1 << ", " << instr.src2; break;
+            case Opcode::FADD:  ss << "FADD " << instr.dest << ", " << instr.src1 << ", " << instr.src2; break;
+            case Opcode::INC:   ss << "INC " << instr.dest; break;
+            case Opcode::DEC:   ss << "DEC " << instr.dest; break;
+            case Opcode::JNZ:   ss << "JNZ " << instr.dest << " (REG3=" << regFile_.get("REG3") << ")"; break;
+            default:            ss << "UNKNOWN"; break;
+            }
+            ss << "\n";
         }
-        ss << "\n";
 
         size_t old_pc = pc_;
         pc_ = control_.executeInstruction(instr, old_pc);
+        instruction_count++;
 
-        if (instr.opcode == Opcode::JNZ)
+        if (instr.opcode == Opcode::JNZ && (instruction_count < 10 || instruction_count % 100 == 0))
         {
             if (old_pc != pc_)
                 ss << "[PE" << id_ << "] Jump taken from " << old_pc << " to PC=" << pc_ << "\n";
@@ -210,12 +226,21 @@ void ProcessingElement::run()
                 ss << "[PE" << id_ << "] Jump not taken, continuing to PC=" << pc_ << "\n";
         }
 
-        ss << "[PE" << id_ << "] Registers after instruction:\n" << regFile_.dump_str() << "\n";
+        // Solo mostrar registros ocasionalmente
+        if (instruction_count < 5 || instruction_count % 500 == 0) {
+            ss << "[PE" << id_ << "] Registers after instruction #" << instruction_count << ":\n" << regFile_.dump_str() << "\n";
+        }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        // Quitar el sleep que ralentiza mucho
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    ss << "[PE" << id_ << "] Execution end.\n";
+    if (instruction_count >= MAX_INSTRUCTIONS) {
+        ss << "[PE" << id_ << "] WARNING: Execution stopped after " << MAX_INSTRUCTIONS << " instructions (possible infinite loop)\n";
+    }
+
+    ss << "[PE" << id_ << "] Execution end after " << instruction_count << " instructions.\n";
+    ss << "[PE" << id_ << "] Final registers:\n" << regFile_.dump_str() << "\n";
     output_ = ss.str();
 }
 

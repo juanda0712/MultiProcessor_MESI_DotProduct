@@ -23,10 +23,10 @@ int Cache::id() const { return id_; }
 // ============================
 Cache::WayRef Cache::lookup(uint64_t base) {
     size_t set = line_index(base) % NUM_SETS;
-    for (int w = 0; w < NUM_WAYS; ++w) {
+    for (size_t w = 0; w < NUM_WAYS; ++w) {
         CacheLine& cl = sets_[set][w];
         if (cl.valid && cl.tag == base && cl.state != MESI::I)
-            return WayRef{(int)set, w, &cl};
+            return WayRef{(int)set, (int)w, &cl};
     }
     return WayRef{};
 }
@@ -58,10 +58,10 @@ Cache::WayRef Cache::find_free_or_victim(uint64_t base,
 {
     size_t set = line_index(base) % NUM_SETS;
 
-    for (int w = 0; w < NUM_WAYS; ++w) {
+    for (size_t w = 0; w < NUM_WAYS; ++w) {
         CacheLine& cl = sets_[set][w];
         if (!cl.valid || cl.state == MESI::I)
-            return WayRef{(int)set, w, &cl};
+            return WayRef{(int)set, (int)w, &cl};
     }
 
     int vic = lru_[set].pick();

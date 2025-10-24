@@ -157,7 +157,7 @@ static void ComputeRepoPaths() {
     g_srcDir   = g_repoRoot + L"\\src";
     g_incDir   = g_repoRoot + L"\\include";
     g_buildDir = g_repoRoot + L"\\build";
-    g_outputExe= g_buildDir + L"\\multiprocessor_sim.exe";
+    g_outputExe= g_buildDir + L"\\mesi_simulator.exe";
 }
 
 static void SetChildText(HWND hWnd, UINT id, const std::wstring& text) {
